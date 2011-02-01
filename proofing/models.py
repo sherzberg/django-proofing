@@ -75,15 +75,16 @@ def randomFilename(filename):
     return str(uuid.uuid4())+ext
 
 
-class CategoryManager(models.Manager):
+class CategoryManager(wbmodels.WBManager):
     def get_query_set(self):
         objects = super(CategoryManager, self).get_query_set()
-        objects.filter(is_active=True)
         objects.filter(gallery__in=Gallery.active.all())
         return objects.distinct()
     
 class Category(wbmodels.WBModel):
 
+    active = CategoryManager()
+    
     class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('category')
         verbose_name_plural = _('categories')
@@ -103,25 +104,12 @@ class GalleryType(wbmodels.WBModel):
         verbose_name = _('gallery type')
         verbose_name_plural = _('gallery types')
     
-class GalleryManager(models.Manager):
+class GalleryManager(wbmodels.WBManager):
     def get_query_set(self):
         objects = super(GalleryManager, self).get_query_set()
-        objects.filter(is_active=True)
-        #objects.exclude(users__in=User.objects.all())
         objects.filter(date_expires__lt=datetime.now())
+        return objects.distinct()
 
-        return objects
-
-#    def filter(self, *args, **kwargs):
-#        user = kwargs.get('user',None)
-#        if user:
-#            if user.is_authenticated:
-#                if user.is_superuser:
-#                    kwargs.pop('user')
-#            else:
-#                return QuerySet()
-#        return self.get_query_set().filter(*args, **kwargs)
-    
 class Gallery(wbmodels.WBModel):
     category = models.ForeignKey(Category)
     #type could be a many to many field??? could also add an options field
@@ -130,7 +118,7 @@ class Gallery(wbmodels.WBModel):
     date_expires = models.DateTimeField(_('date expires'), blank=True, null=True)
     
     objects = models.Manager()
-    active = wbmodels.WBManager()
+    active = GalleryManager()
     
     class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery')
@@ -244,7 +232,7 @@ class GalleryUpload(wbmodels.WBModel):
 
 class Photo(wbmodels.WBModel):
     gallery = models.ForeignKey(Gallery)
-    image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=PROOFING_PATH)
+    image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=os.path.join(PROOFING_PATH,'orig'))
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
@@ -273,10 +261,12 @@ class Photo(wbmodels.WBModel):
         return reverse(PROOFING_URL_NAMES.PHOTO, args=[self.title_slug])
 
     def cache_path(self):
-        return os.path.join(os.path.dirname(self.image.path), "cache")
+#        print 'cache_path', os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
+        return os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
 
     def cache_url(self):
-        return '/'.join([os.path.dirname(self.image.url), "cache"])
+#        print 'cache_url',  '/'.join([PROOFING_PATH, "cache"])
+        return '/'.join([settings.MEDIA_URL, PROOFING_PATH, "cache"])
 
     def image_filename(self):
         return os.path.basename(force_unicode(self.image.path))
@@ -345,7 +335,6 @@ class Photo(wbmodels.WBModel):
         models.Model.save(self)
         
     def size_exists(self, photosize):
-        print 'size_exists'
         func = getattr(self, "get_%s_filename" % photosize.title, None)
         if func is not None:
             if os.path.isfile(func()):
@@ -401,6 +390,7 @@ class Photo(wbmodels.WBModel):
             os.makedirs(self.cache_path())
         try:
             im = Image.open(self.image.path)
+            print 'yes!!'
         except IOError:
             return
         # Save the original format
@@ -422,7 +412,7 @@ class Photo(wbmodels.WBModel):
         #im.save(im_filename)
         print self.image.path
         im.save(im_filename, 'JPEG', quality=int(photosize.quality), optimize=True)
-            
+        print 'fn',im_filename
             
         try:
             if im_format != 'JPEG':
