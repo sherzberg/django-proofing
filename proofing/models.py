@@ -16,9 +16,6 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.files.base import ContentFile
 
-#from utils import EXIF
-#from utils.watermark import apply_watermark
-
 try:
     import Image
     import ImageFile
@@ -37,7 +34,7 @@ except ImportError:
 
 
 from urls import PROOFING_URL_NAMES 
-from utils import EXIF
+from utils import EXIF, models as wbmodels
 from utils.reflection import add_reflection
 from utils.watermark import apply_watermark
 
@@ -85,29 +82,11 @@ class CategoryManager(models.Manager):
         objects.filter(gallery__in=Gallery.active.all())
         return objects.distinct()
     
-class Category(models.Model):
-    date_added = models.DateTimeField(_('date published', default=datetime.now()))
-    updated_at = models.DateTimeField(auto_now=True)
-    title = models.CharField(_('title'), max_length=100, unique=True)
-    title_slug = models.SlugField(_('title slug'), unique=True, help_text=_('A "slug" is a unique URL-friendly title for an object'))
-    description = models.TextField(_('description'), blank=True)
-    is_active = models.BooleanField(default=True)
-    meta_keywords = models.CharField(_('meta keywords'), max_length=255, help_text=_('Comma-delimited set of SEO keywords for meta tag. ex: ifa,var,varsity,fb,football,...'), blank=True)
-    
-    objects = models.Manager()
-    active = CategoryManager()
-    
-    class Meta:
-        ordering = ['-date_added']
-        get_latest_by = 'date_added'
+class Category(wbmodels.WBModel):
+
+    class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('category')
         verbose_name_plural = _('categories')
-        
-    def __unicode__(self):
-        return self.title
-    
-    def __str__(self):
-        return self.__unicode__()
     
     def get_absolute_url(self):
         return reverse(PROOFING_URL_NAMES.CATEGORY, args=[self.title_slug])
@@ -118,22 +97,11 @@ class Category(models.Model):
         else:
             return PROOFING_DEFAULT_THUMB
 
-class GalleryType(models.Model):
-    date_added = models.DateTimeField(_('date published', default=datetime.now()))
-    updated_at = models.DateTimeField(auto_now=True)
-    title = models.CharField(_('title'), max_length=100, unique=True)
-    title_slug = models.SlugField(_('title slug'), unique=True, help_text=_('A "slug" is a unique URL-friendly title for an object'))
-    description = models.TextField(_('description'), blank=True)
-    is_active = models.BooleanField(default=True)
-    
-    class Meta:
-        ordering = ['-date_added']
-        get_latest_by = 'date_added'
+class GalleryType(wbmodels.WBModel):
+
+    class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery type')
         verbose_name_plural = _('gallery types')
-
-    def __unicode__(self):
-        return self.title
     
 class GalleryManager(models.Manager):
     def get_query_set(self):
@@ -154,35 +122,19 @@ class GalleryManager(models.Manager):
 #                return QuerySet()
 #        return self.get_query_set().filter(*args, **kwargs)
     
-class Gallery(models.Model):
-    date_added = models.DateTimeField(_('date published', default=datetime.now()))
-    updated_at = models.DateTimeField(_('date updated', default=datetime.now()))
-    title = models.CharField(_('title'), max_length=100, unique=True)
-    title_slug = models.SlugField(_('title slug'), unique=True, help_text=_('A "slug" is a unique URL-friendly title for an object'))
-    description = models.TextField(_('description'), blank=True)
-    is_active = models.BooleanField(default=True)
-    meta_keywords = models.CharField(_('met _keywords'), max_length=255, help_text=_('Comma-delimited set of SEO keywords for meta tag. ex: cars, balloons, sunsets,...'), blank=True)
-    
+class Gallery(wbmodels.WBModel):
     category = models.ForeignKey(Category)
     #type could be a many to many field??? could also add an options field
     type = models.ForeignKey(GalleryType)
     users = models.ManyToManyField(User,blank=True)
-    date_expires = models.DateTimeField(_('date expires'), blank=True)
+    date_expires = models.DateTimeField(_('date expires'), blank=True, null=True)
     
     objects = models.Manager()
-    active = GalleryManager()
+    active = wbmodels.WBManager()
     
-    class Meta:
-        ordering = ['-date_added']
-        get_latest_by = 'date_added'
+    class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery')
         verbose_name_plural = _('galleries')
-        
-    def __unicode__(self):
-        return self.title
-    
-    def __str__(self):
-        return self.__unicode__()
     
     def get_absolute_url(self):
         return reverse(PROOFING_URL_NAMES.EVENT, args=[self.title_slug])
@@ -215,15 +167,12 @@ class Gallery(models.Model):
             return PROOFING_DEFAULT_THUMB
 
 
-class GalleryUpload(models.Model):
+class GalleryUpload(wbmodels.WBModel):
     zip_file = models.FileField(_('images file (.zip)'), upload_to=PROOFING_PATH+"/uploads",
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
-    title = models.CharField(_('title'), max_length=75, help_text=_('All photos in the gallery will be given a title made up of the gallery title + a sequential number.'))
-    description = models.TextField(_('description'), blank=True, help_text=_('A description of this Gallery.'))
-    meta_keywords = models.CharField(_('met _keywords'), max_length=255, help_text=_('Comma-delimited set of SEO keywords for meta tag. ex: cars, balloons, sunsets,...'), blank=True)
-    
-    class Meta:
+
+    class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery upload')
         verbose_name_plural = _('gallery uploads')
 
@@ -293,24 +242,14 @@ class GalleryUpload(models.Model):
 
 
 
-class Photo(models.Model):
-    date_added = models.DateTimeField(_('date added'), default=datetime.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
-    title = models.CharField(_('title'), max_length=100, unique=False)
-    title_slug = models.SlugField(_('slug'), unique=True, help_text=('A "slug" is a unique URL-friendly title for an object.'))
-    description = models.TextField(_('description'), blank=True)
-    is_active = models.BooleanField(default=True)
-    meta_keywords = models.CharField(_('met _keywords'), max_length=255, help_text=_('Comma-delimited set of SEO keywords for meta tag. ex: puppy, abstract, family, rainbow,...'), blank=True)
-    
+class Photo(wbmodels.WBModel):
     gallery = models.ForeignKey(Gallery)
     image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=PROOFING_PATH)
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
     
-    class Meta:
-        ordering = ['date_added']
-        get_latest_by = 'date_added'
+    class Meta(wbmodels.WBModel.Meta):
         verbose_name = _("photo")
         verbose_name_plural = _("photos")
     
@@ -373,12 +312,12 @@ class Photo(models.Model):
             self.create_size(photosize)
         if photosize.increment_count:
             self.increment_count()
-        return '/'.join([self.cache_url(), self._get_filename_for_size(photosize.name)])
+        return '/'.join([self.cache_url(), self._get_filename_for_size(photosize.title)])
 
     def _get_SIZE_filename(self, size):
         photosize = PhotoSizeCache().sizes.get(size)
         return smart_str(os.path.join(self.cache_path(),
-                            self._get_filename_for_size(photosize.name)))
+                            self._get_filename_for_size(photosize.title)))
     def get_thumb_url(self):
         default_size = "%dx%d" %(PROOFING_DEFAULT_THUMB_SIZE)
             
@@ -406,7 +345,8 @@ class Photo(models.Model):
         models.Model.save(self)
         
     def size_exists(self, photosize):
-        func = getattr(self, "get_%s_filename" % photosize.name, None)
+        print 'size_exists'
+        func = getattr(self, "get_%s_filename" % photosize.title, None)
         if func is not None:
             if os.path.isfile(func()):
                 return True
@@ -453,7 +393,9 @@ class Photo(models.Model):
         return im
 
     def create_size(self, photosize):
+        
         if self.size_exists(photosize):
+            print 'exists'
             return
         if not os.path.isdir(self.cache_path()):
             os.makedirs(self.cache_path())
@@ -475,7 +417,7 @@ class Photo(models.Model):
         if photosize.watermark is not None:
             im = photosize.watermark.post_process(im)
         # Save file
-        im_filename = getattr(self, "get_%s_filename" % photosize.name)()
+        im_filename = getattr(self, "get_%s_filename" % photosize.title)()
         
         #im.save(im_filename)
         print self.image.path
@@ -498,7 +440,7 @@ class Photo(models.Model):
     def remove_size(self, photosize, remove_dirs=True):
         if not self.size_exists(photosize):
             return
-        filename = getattr(self, "get_%s_filename" % photosize.name)()
+        filename = getattr(self, "get_%s_filename" % photosize.title)()
         if os.path.isfile(filename):
             os.remove(filename)
         if remove_dirs:
@@ -549,7 +491,7 @@ class Photo(models.Model):
         self.clear_cache()
         super(models.Model, self).delete()
     
-class Watermark(models.Model):
+class Watermark(wbmodels.WBModel):
     image = models.ImageField(_('image'), upload_to=os.path.join(PROOFING_PATH, 'watermarks'))
     style = models.CharField(_('style'), max_length=5, choices=WATERMARK_STYLE_CHOICES, default='scale')
     opacity = models.FloatField(_('opacity'), default=1, help_text=_("The opacity of the overlay."))
@@ -564,27 +506,20 @@ class Watermark(models.Model):
     
     
     
-class PhotoSize(models.Model):
-    name = models.CharField(_('name'), max_length=20, unique=True, help_text=_('Photo size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
+class PhotoSize(wbmodels.WBModel):
     width = models.PositiveIntegerField(_('width'), default=0, help_text=_('If width is set to "0" the image will be scaled to the supplied height.'))
     height = models.PositiveIntegerField(_('height'), default=0, help_text=_('If height is set to "0" the image will be scaled to the supplied width'))
-    quality = models.PositiveIntegerField(_('quality'), choices=JPEG_QUALITY_CHOICES, default=70, help_text=_('JPEG image quality.'))
+    quality = models.PositiveIntegerField(_('quality'), choices=JPEG_QUALITY_CHOICES, default=90, help_text=_('JPEG image quality.'))
     upscale = models.BooleanField(_('upscale images?'), default=False, help_text=_('If selected the image will be scaled up if necessary to fit the supplied dimensions. Cropped sizes will be upscaled regardless of this setting.'))
     crop = models.BooleanField(_('crop to fit?'), default=False, help_text=_('If selected the image will be scaled and cropped to fit the supplied dimensions.'))
     pre_cache = models.BooleanField(_('pre-cache?'), default=False, help_text=_('If selected this photo size will be pre-cached as photos are added.'))
     increment_count = models.BooleanField(_('increment view count?'), default=False, help_text=_('If selected the image\'s "view_count" will be incremented when this photo size is displayed.'))
     watermark = models.ForeignKey('Watermark', null=True, blank=True, related_name='photo_sizes', verbose_name=_('watermark image'))
 
-    class Meta:
+    class Meta(wbmodels.WBModel.Meta):
         ordering = ['width', 'height']
         verbose_name = _('photo size')
         verbose_name_plural = _('photo sizes')
-
-    def __unicode__(self):
-        return self.name
-
-    def __str__(self):
-        return self.__unicode__()
 
     def clear_cache(self):
         for cls in Photo.__subclasses__():
@@ -626,7 +561,7 @@ class PhotoSizeCache(object):
         if not len(self.sizes):
             sizes = PhotoSize.objects.all()
             for size in sizes:
-                self.sizes[size.name] = size
+                self.sizes[size.title] = size
 
     def reset(self):
         self.sizes = {}
