@@ -79,7 +79,7 @@ def randomFilename(filename):
 class CategoryManager(wbmodels.WBManager):
     def get_query_set(self):
         objects = super(CategoryManager, self).get_query_set()
-        objects.filter(gallery__in=Gallery.active.all())
+        objects = objects.filter(gallery__in=Gallery.active.all())
         return objects.distinct()
     
 class Category(wbmodels.WBModel):
@@ -108,7 +108,13 @@ class GalleryType(wbmodels.WBModel):
 class GalleryManager(wbmodels.WBManager):
     def get_query_set(self):
         objects = super(GalleryManager, self).get_query_set()
-        objects.filter(date_expires__lt=datetime.now())
+        objects = objects.filter(
+                              models.Q(date_expires__gte=datetime.now())
+                              |
+                              models.Q(date_expires=None)
+                              )
+        objects = objects.filter(photo__in = Photo.objects.all())
+        #there may be performance issues here... need to look at the sql
         return objects.distinct()
 
 class Gallery(wbmodels.WBModel):
@@ -235,7 +241,7 @@ class Photo(wbmodels.WBModel):
     gallery = models.ForeignKey(Gallery)
     image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=os.path.join(PROOFING_PATH,'orig'))
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
-    view_count = models.PositiveIntegerField(default=0, editable=False)
+    view_count = models.PositiveIntegerField(default=0, editable=True)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
     
     class Meta(wbmodels.WBModel.Meta):
