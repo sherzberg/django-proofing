@@ -59,6 +59,7 @@ JPEG_QUALITY_CHOICES = (
 WATERMARK_STYLE_CHOICES = (
     ('tile', _('Tile')),
     ('scale', _('Scale')),
+    ('bottomright', _('Bottom Right')),
 )
 
 # choices for new crop_anchor field in Photo
