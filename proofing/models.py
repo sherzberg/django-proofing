@@ -122,7 +122,7 @@ class Gallery(wbmodels.WBModel):
     #type could be a many to many field??? could also add an options field
     type = models.ForeignKey(GalleryType)
     users = models.ManyToManyField(User,blank=True)
-    date_expires = models.DateTimeField(_('date expires'), blank=True, null=True)
+    date_expires = models.DateField(_('date expires'), blank=True, null=True)
     
     objects = models.Manager()
     active = GalleryManager()
