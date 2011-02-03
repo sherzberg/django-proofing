@@ -33,6 +33,10 @@ class Command(BaseCommand):
                                   width=size[0],
                                   crop=True
                                   )
+            
+            if size == 'regular':
+                photosize.increment_count = True
+                
             photosize.save()
             
         print 'PhotoSizes Done'
