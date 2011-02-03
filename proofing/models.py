@@ -140,7 +140,7 @@ class Gallery(wbmodels.WBModel):
     def get_absolute_url(self):
         return reverse(PROOFING_URL_NAMES.EVENT, args=[self.slug])
     
-    def is_users(self):
+    def has_users(self):
         if len(self.users.all()) > 0:
             return True
         else:
@@ -153,13 +153,15 @@ class Gallery(wbmodels.WBModel):
         else:
             return self.date_expires < datetime.now()
     
-    def is_my_event(self, user):
+    def is_users(self, user):
         if user.is_superuser: return True
-        if user.is_anonymous and not self.is_users(): return True
-        if self in user.event_set.all(): return True
-        if not user.is_anonymous:
-            if self in user.event_set.all(): return True
-        return False
+        
+        if user.is_authenticated():
+            if self.has_users():
+                return self in user.gallery_set.all()
+            else: return True
+        else:
+            return not self.has_users()
     
     def get_thumb_url(self):
         if len(Photo.objects.filter(gallery=self)):
@@ -277,6 +279,16 @@ class Photo(wbmodels.WBModel):
     def get_absolute_url(self):
         return reverse(PROOFING_URL_NAMES.PHOTO, args=[self.slug])
 
+    def is_users(self, user):
+        if user.is_superuser: return True
+        
+        if user.is_authenticated():
+            if self.gallery.has_users():
+                return self.gallery in user.gallery_set.all()
+            else: return True
+        else:
+            return not self.gallery.has_users()
+    
     def cache_path(self):
 #        print 'cache_path', os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
         return os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
