@@ -536,11 +536,11 @@ class PhotoSize(wbmodels.WBModel):
         verbose_name_plural = _('photo sizes')
 
     def clear_cache(self):
-        for cls in Photo.__subclasses__():
-            for obj in cls.objects.all():
-                obj.remove_size(self)
-                if self.pre_cache:
-                    obj.create_size(self)
+        for obj in Photo.objects.all():
+            print obj
+            obj.remove_size(self)
+            if self.pre_cache:
+                obj.create_size(self)
         PhotoSizeCache().reset()
 
     def save(self, *args, **kwargs):
