@@ -164,8 +164,9 @@ class Gallery(wbmodels.WBModel):
             return not self.has_users()
     
     def get_thumb_url(self):
-        if len(Photo.objects.filter(gallery=self)):
-            return Photo.objects.all()[0].get_thumb_url()
+        my_photos = Photo.objects.filter(gallery=self)
+        if len(my_photos):
+            return my_photos[0].get_thumb_url()
         else:
             return PROOFING_DEFAULT_THUMB
 

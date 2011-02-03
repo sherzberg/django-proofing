@@ -12,9 +12,11 @@ class PROOFING_URL_NAMES():
 urlpatterns = patterns('proofing.views',
     (r'^$','index',{}, PROOFING_URL_NAMES.INDEX),
     
-    (r'^(?P<category_slug>[-\w]+)/$', 'show_category', {}, PROOFING_URL_NAMES.CATEGORY),
-    (r'^event/(?P<gallery_slug>[-\w]+)/$', 'show_gallery', {}, PROOFING_URL_NAMES.EVENT),
-    (r'^photo/(?P<photo_slug>[-\w]+)/$', 'show_photo', {}, PROOFING_URL_NAMES.PHOTO),
+    (r'^(?P<slug>[-\w]+)/$', 'show_category', {}, PROOFING_URL_NAMES.CATEGORY),
+    
+    #must pass slug for decorators
+    (r'^gallery/(?P<slug>[-\w]+)/$', 'show_gallery', {}, PROOFING_URL_NAMES.EVENT),
+    (r'^photo/(?P<slug>[-\w]+)/$', 'show_photo', {}, PROOFING_URL_NAMES.PHOTO),
     
 )
 
