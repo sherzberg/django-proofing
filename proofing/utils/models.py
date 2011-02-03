@@ -12,11 +12,10 @@ class WBManager(models.Manager):
     
 class WBModel(models.Model):
     
-    date_added = models.DateTimeField(_('date published'), default=datetime.now())
-    date_changed = models.DateTimeField(_('date updated'), default=datetime.now())
+    date_added = models.DateTimeField(_('date added'), auto_now_add=True, editable=False)
+    date_changed = models.DateTimeField(_('date changed'), auto_now_add=True, auto_now=True)
 
-    title = models.CharField(_('title'), max_length=100, unique=True)
-    title_slug = models.SlugField(_('title slug'), unique=True, help_text=_('A "slug" is a unique URL-friendly title for an object'))
+    slug = models.SlugField(_('slug'), unique=True, help_text=_('A "slug" is a unique URL-friendly title for an object'))
     description = models.TextField(_('description'), blank=True)
     
     is_active = models.BooleanField(default=True)
@@ -38,7 +37,6 @@ class WBModel(models.Model):
         return self.__unicode__()
     
     def save(self, *args, **kwargs):
-        print 'saving!!!!!'
         self.date_changed = datetime.now()
         super(WBModel, self).save(*args, **kwargs)
             

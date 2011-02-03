@@ -42,8 +42,7 @@ def apply_watermark(im, mark, position, opacity=1):
                 layer.paste(mark, (x, y))
     elif position == 'scale':
         # scale, but preserve the aspect ratio
-        ratio = min(
-            float(im.size[0]) / mark.size[0], float(im.size[1]) / mark.size[1])
+        ratio = min(float(im.size[0]) / mark.size[0], float(im.size[1]) / mark.size[1])
         w = int(mark.size[0] * ratio)
         h = int(mark.size[1] * ratio)
         mark = mark.resize((w, h))
@@ -54,8 +53,11 @@ def apply_watermark(im, mark, position, opacity=1):
         y = im.size[1] - mark.size[1]
         layer.paste(mark, (x, y))
         
-    else:
-        layer.paste(mark, position)
+    else: #center
+        
+        w = int(im.size[0] - mark.size[0])
+        h = int(im.size[1] - mark.size[1])
+        layer.paste(mark, (w/2, h/2))
         
     # composite the watermark with the layer
     return Image.composite(layer, im, layer)

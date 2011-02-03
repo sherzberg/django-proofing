@@ -13,7 +13,7 @@ def index(request, template_name="proofing/generic_list.html"):
     return render_to_response(template_name, locals(), context_instance=RequestContext(request))
 
 def show_category(request, category_slug, template_name="proofing/generic_list.html"):
-    current = get_object_or_404(Category, title_slug = category_slug)
+    current = get_object_or_404(Category, slug = category_slug)
     
     objects = Gallery.active.filter(category=current)
     
@@ -22,7 +22,7 @@ def show_category(request, category_slug, template_name="proofing/generic_list.h
 
 
 def show_gallery(request, gallery_slug, template_name="proofing/generic_list.html"):
-    current = get_object_or_404(Gallery, title_slug = gallery_slug)
+    current = get_object_or_404(Gallery, slug = gallery_slug)
     parent = current.category
     
     objects = Photo.objects.filter(gallery=current)
@@ -32,7 +32,7 @@ def show_gallery(request, gallery_slug, template_name="proofing/generic_list.htm
 
 
 def show_photo(request, photo_slug, template_name="proofing/photo.html"):
-    photo = get_object_or_404(Photo, title_slug = photo_slug)
+    photo = get_object_or_404(Photo, slug = photo_slug)
          
     page_title = 'Show Photo'
     return render_to_response(template_name, locals(), context_instance=RequestContext(request))

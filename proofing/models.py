@@ -57,6 +57,7 @@ JPEG_QUALITY_CHOICES = (
 )
 
 WATERMARK_STYLE_CHOICES = (
+    ('center', _('Center')),
     ('tile', _('Tile')),
     ('scale', _('Scale')),
     ('bottomright', _('Bottom Right')),
@@ -83,7 +84,9 @@ class CategoryManager(wbmodels.WBManager):
         return objects.distinct()
     
 class Category(wbmodels.WBModel):
-
+    title = models.CharField(_('title'), max_length=100, unique=True)
+    
+    objects = models.Manager()
     active = CategoryManager()
     
     class Meta(wbmodels.WBModel.Meta):
@@ -91,7 +94,7 @@ class Category(wbmodels.WBModel):
         verbose_name_plural = _('categories')
     
     def get_absolute_url(self):
-        return reverse(PROOFING_URL_NAMES.CATEGORY, args=[self.title_slug])
+        return reverse(PROOFING_URL_NAMES.CATEGORY, args=[self.slug])
 
     def get_thumb_url(self):
         if len(Gallery.active.filter(category=self)) > 0:
@@ -100,7 +103,8 @@ class Category(wbmodels.WBModel):
             return PROOFING_DEFAULT_THUMB
 
 class GalleryType(wbmodels.WBModel):
-
+    title = models.CharField(_('title'), max_length=100, unique=True)
+    
     class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery type')
         verbose_name_plural = _('gallery types')
@@ -118,6 +122,8 @@ class GalleryManager(wbmodels.WBManager):
         return objects.distinct()
 
 class Gallery(wbmodels.WBModel):
+    title = models.CharField(_('title'), max_length=100, unique=True)
+    
     category = models.ForeignKey(Category)
     #type could be a many to many field??? could also add an options field
     type = models.ForeignKey(GalleryType)
@@ -132,7 +138,7 @@ class Gallery(wbmodels.WBModel):
         verbose_name_plural = _('galleries')
     
     def get_absolute_url(self):
-        return reverse(PROOFING_URL_NAMES.EVENT, args=[self.title_slug])
+        return reverse(PROOFING_URL_NAMES.EVENT, args=[self.slug])
     
     def is_users(self):
         if len(self.users.all()) > 0:
@@ -163,9 +169,11 @@ class Gallery(wbmodels.WBModel):
 
 
 class GalleryUpload(wbmodels.WBModel):
+    title = models.CharField(_('title'), max_length=100, unique=True)
+    
     zip_file = models.FileField(_('images file (.zip)'), upload_to=PROOFING_PATH+"/uploads",
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
-    gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
+    gallery = models.ForeignKey(Gallery, null=False, blank=False, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
 
     class Meta(wbmodels.WBModel.Meta):
         verbose_name = _('gallery upload')
@@ -189,9 +197,10 @@ class GalleryUpload(wbmodels.WBModel):
                 gallery = self.gallery
             else:
                 gallery = Gallery.objects.create(title=self.title,
-                                                 title_slug=slugify(self.title),
+                                                 slug=slugify(self.title),
                                                  description=self.description,
-                                                 meta_keywords=self.meta_keywords
+                                                 meta_keywords=self.meta_keywords,
+                                                 category=self.category
                                                  )
             from cStringIO import StringIO
             for filename in sorted(zip.namelist()):
@@ -217,10 +226,10 @@ class GalleryUpload(wbmodels.WBModel):
                         slug = slugify(title)
                         slug = str(uuid.uuid4())
                         try:
-                            p = Photo.objects.get(title_slug=slug)
+                            p = Photo.objects.get(slug=slug)
                         except Photo.DoesNotExist:
                             photo = Photo(title=filename,
-                                          title_slug=slug,
+                                          slug=slug,
                                           description=self.description,
                                           is_active=False,
                                           gallery=gallery,
@@ -238,6 +247,7 @@ class GalleryUpload(wbmodels.WBModel):
 
 
 class Photo(wbmodels.WBModel):
+    title = models.CharField(_('title'), max_length=100, unique=False)
     gallery = models.ForeignKey(Gallery)
     image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=os.path.join(PROOFING_PATH,'orig'))
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
@@ -265,7 +275,7 @@ class Photo(wbmodels.WBModel):
         return self.__unicode__()
     
     def get_absolute_url(self):
-        return reverse(PROOFING_URL_NAMES.PHOTO, args=[self.title_slug])
+        return reverse(PROOFING_URL_NAMES.PHOTO, args=[self.slug])
 
     def cache_path(self):
 #        print 'cache_path', os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
@@ -462,8 +472,8 @@ class Photo(wbmodels.WBModel):
             pass
         
     def save(self, *args, **kwargs):
-        if self.title_slug is None:
-            self.title_slug = slugify(self.title)
+        if self.slug is None:
+            self.slug = slugify(self.title)
             
         if self.date_taken is None:
             try:
@@ -489,21 +499,28 @@ class Photo(wbmodels.WBModel):
         super(models.Model, self).delete()
     
 class Watermark(wbmodels.WBModel):
+    title = models.CharField(_('title'), max_length=100, unique=True)
     image = models.ImageField(_('image'), upload_to=os.path.join(PROOFING_PATH, 'watermarks'))
-    style = models.CharField(_('style'), max_length=5, choices=WATERMARK_STYLE_CHOICES, default='scale')
+    style = models.CharField(_('style'), max_length=5, choices=WATERMARK_STYLE_CHOICES, default='center')
     opacity = models.FloatField(_('opacity'), default=1, help_text=_("The opacity of the overlay."))
 
     class Meta:
         verbose_name = _('watermark')
         verbose_name_plural = _('watermarks')
-
+    
+    def save(self, *args, **kwargs):
+        super(Watermark, self).save(*args, **kwargs)
+        PhotoSizeCache().reset()
+        
     def post_process(self, im):
         mark = Image.open(self.image.path)
         return apply_watermark(im, mark, self.style, self.opacity)
     
+
     
     
 class PhotoSize(wbmodels.WBModel):
+    title = models.CharField(_('title'), max_length=100, unique=True)
     width = models.PositiveIntegerField(_('width'), default=0, help_text=_('If width is set to "0" the image will be scaled to the supplied height.'))
     height = models.PositiveIntegerField(_('height'), default=0, help_text=_('If height is set to "0" the image will be scaled to the supplied width'))
     quality = models.PositiveIntegerField(_('quality'), choices=JPEG_QUALITY_CHOICES, default=90, help_text=_('JPEG image quality.'))
@@ -511,7 +528,7 @@ class PhotoSize(wbmodels.WBModel):
     crop = models.BooleanField(_('crop to fit?'), default=False, help_text=_('If selected the image will be scaled and cropped to fit the supplied dimensions.'))
     pre_cache = models.BooleanField(_('pre-cache?'), default=False, help_text=_('If selected this photo size will be pre-cached as photos are added.'))
     increment_count = models.BooleanField(_('increment view count?'), default=False, help_text=_('If selected the image\'s "view_count" will be incremented when this photo size is displayed.'))
-    watermark = models.ForeignKey('Watermark', null=True, blank=True, related_name='photo_sizes', verbose_name=_('watermark image'))
+    watermark = models.ForeignKey(Watermark, null=True, blank=True, related_name='photo_sizes', verbose_name=_('watermark image'))
 
     class Meta(wbmodels.WBModel.Meta):
         ordering = ['width', 'height']

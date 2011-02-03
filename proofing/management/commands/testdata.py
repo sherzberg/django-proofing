@@ -16,19 +16,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for c in CATEGORIES:
-            cat = Category(title=c,title_slug=c.lower())
+            cat = Category(title=c,slug=c.lower())
             cat.save()
             
         print 'Categories Done'
         for gt in GALLERYTYPES:
-            gtype = GalleryType(title=gt,title_slug=gt.lower())
+            gtype = GalleryType(title=gt,slug=gt.lower())
             gtype.save()
             
         print 'GalleryTypes Done'
         
         for ps,size in PHOTOSIZES.items():
             photosize = PhotoSize(title=ps,
-                                  title_slug=ps.lower(),
+                                  slug=ps.lower(),
                                   height=size[1],
                                   width=size[0]
                                   )
