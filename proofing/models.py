@@ -510,6 +510,8 @@ class Watermark(wbmodels.WBModel):
     
     def save(self, *args, **kwargs):
         super(Watermark, self).save(*args, **kwargs)
+        for ps in PhotoSize.objects.filter(watermark=self):
+            ps.clear_cache()
         PhotoSizeCache().reset()
         
     def post_process(self, im):
@@ -537,7 +539,6 @@ class PhotoSize(wbmodels.WBModel):
 
     def clear_cache(self):
         for obj in Photo.objects.all():
-            print obj
             obj.remove_size(self)
             if self.pre_cache:
                 obj.create_size(self)
