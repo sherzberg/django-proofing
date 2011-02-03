@@ -21,7 +21,7 @@ class WBBreadcrumbTrail(object):
     def __init__(self,*args):
         self.objects = args
 
-    def as_li(self, ul_class='wb-breadcrumb', li_class='wb-breadcrumb-item'):
+    def as_ul(self, ul_class='wb-breadcrumb', li_class='wb-breadcrumb-item'):
         c = Context({
                      'ul_class': ul_class,
                      'li_class': li_class,

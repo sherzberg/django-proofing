@@ -13,6 +13,10 @@
 
 {%autopaginate objects 9%}
 
+<div class="store_breadcrumb ui-corner-all">
+{{breadcrumbtrail.as_ul}}
+</div>
+
 <div class="pagenav">{%paginate%}</div>
 
 {% for object in objects %}
