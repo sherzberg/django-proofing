@@ -40,7 +40,7 @@ def show_gallery(request, obj, template_name="proofing/generic_list.html"):
 
 @check_perm_for(Photo)
 def show_photo(request, obj, template_name="proofing/photo.html"):
-    photo = photo
+    photo = obj
     
     breadcrumbtrail = WBBreadcrumbTrail(
                                         WBBreadcrumb('Home',reverse('proofing-index')),
