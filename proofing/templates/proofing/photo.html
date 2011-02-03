@@ -1,8 +1,14 @@
-<a href="{% url proofing-index %}">Home</a>
-{{page_title}}
+{% extends "main.html" %}
+{{breadcrumbtrail.as_li}}
+
+
+{% block content %}
 
 
 {{photo.title}}
 <br />
 <br />
 <img src="{{ photo.get_regular_url }}" />
+
+
+{% endblock %}

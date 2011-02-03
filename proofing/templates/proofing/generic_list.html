@@ -1,13 +1,22 @@
-<a href="{% url proofing-index %}">Home</a>
-{{page_title}}
-<h1>{{parent.title}} - parent</h1>
-<h1>{{current.title}} - current</h1>
+{% extends "main.html" %}
+{% load pagination_tags %}
 
+{{breadcrumbtrail.as_li}}
 <hr />
 
+
+{% block content %}
+
+
 <div>
+
+
+{%autopaginate objects 9%}
+
+<div class="pagenav">{%paginate%}</div>
+
 {% for object in objects %}
-    <div style="float: left; padding: 20px;">
+    <div style="float: left; padding: 7px;">
         <a href="{{object.get_absolute_url}}">
 	        <h5>{{object.title}}</h5>
 	        <img src="{{SITE_URL}}{{object.get_thumb_url}}" />
@@ -15,4 +24,12 @@
     </div>
 {% endfor %}
 <div style="clear: both;"/></div>
+
+<div class="pagenav">{%paginate%}</div>
+
+
 </div>
+
+
+
+{% endblock %}
