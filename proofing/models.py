@@ -118,6 +118,7 @@ class GalleryManager(wbmodels.WBManager):
                               models.Q(date_expires=None)
                               )
         objects = objects.filter(photo__in = Photo.objects.all())
+        objects = objects.exclude(users__in=User.objects.all())
         #there may be performance issues here... need to look at the sql
         return objects.distinct()
 
