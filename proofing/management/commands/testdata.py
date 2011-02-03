@@ -30,7 +30,8 @@ class Command(BaseCommand):
             photosize = PhotoSize(title=ps,
                                   slug=ps.lower(),
                                   height=size[1],
-                                  width=size[0]
+                                  width=size[0],
+                                  crop=True
                                   )
             photosize.save()
             
