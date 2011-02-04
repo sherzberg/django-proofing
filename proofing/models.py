@@ -146,7 +146,7 @@ class Gallery(wbmodels.WBModel):
             return True
         else:
             return False
-    
+        
     @property
     def is_expired(self):
         if not date_expired:
@@ -171,6 +171,20 @@ class Gallery(wbmodels.WBModel):
         else:
             return PROOFING_DEFAULT_THUMB
 
+    def admin_thumbnail(self):
+        
+        func = getattr(self, 'get_thumb_url', None)
+        if func is None:
+            return _('An "admin_thumbnail" photo size has not been defined.')
+        else:
+            if hasattr(self, 'get_absolute_url'):
+                return u'<a href="%s" title="View on site"><img src="%s"></a>' % \
+                    (self.get_absolute_url(), func())
+            else:
+                return u'<a href="%s" title="View on site"><img src="%s"></a>' % \
+                    ("#", func())
+    admin_thumbnail.short_description = _('Thumbnail')
+    admin_thumbnail.allow_tags = True
 
 class GalleryUpload(wbmodels.WBModel):
     title = models.CharField(_('title'), max_length=100, unique=True)
@@ -341,6 +355,21 @@ class Photo(wbmodels.WBModel):
         
     def get_thumb_url(self):
         return self._get_SIZE_url(PROOFING_DEFAULT_THUMB_SLUG)
+    
+    def admin_thumbnail(self):
+        
+        func = getattr(self, 'get_thumbnail_url', None)
+        if func is None:
+            return _('An "admin_thumbnail" photo size has not been defined.')
+        else:
+            if hasattr(self, 'get_absolute_url'):
+                return u'<a href="%s" title="View on site"><img src="%s"></a>' % \
+                    (self.get_absolute_url(), func())
+            else:
+                return u'<a href="%s" title="View on site"><img src="%s"></a>' % \
+                    (self.image.url, func())
+    admin_thumbnail.short_description = _('Thumbnail')
+    admin_thumbnail.allow_tags = True
     
     def increment_count(self):
         self.view_count += 1
