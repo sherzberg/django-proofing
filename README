@@ -15,6 +15,7 @@ Proofing Features:
 	- Image view counts can optionally be tracked
 	- Watermarks can be applied to any image
 	- Galleries can be password protected (currently only by django default user auth)
+	- Bulk Gallery uploads via zip file (tar{gz|bz} comming soon)
 
 Proofing First Class Objects
 
