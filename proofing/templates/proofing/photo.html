@@ -1,19 +1,14 @@
 {% extends "main.html" %}
-{{breadcrumbtrail.as_li}}
 
 
 {% block content %}
+<div>
+    
+    {{breadcrumbtrail.as_ul}}
+    <hr />
+	
+	<h3>{{object.title}}</h3>
+	<img src="{{ object.get_regular_url }}" />
 
-
-
-<div class="store_breadcrumb ui-corner-all">
-{{breadcrumbtrail.as_ul}}
 </div>
-
-{{object.title}}
-<br />
-<br />
-<img src="{{ object.get_regular_url }}" />
-
-
 {% endblock %}

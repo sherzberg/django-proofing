@@ -1,39 +1,22 @@
 {% extends "main.html" %}
-{% load pagination_tags %}
-
-{{breadcrumbtrail.as_li}}
-<hr />
 
 
 {% block content %}
-
-
 <div>
 
-
-{%autopaginate objects 9%}
-
-<div class="store_breadcrumb ui-corner-all">
-{{breadcrumbtrail.as_ul}}
-</div>
-
-<div class="pagenav">{%paginate%}</div>
-
-{% for object in objects %}
-    <div style="float: left; padding: 7px;">
-        <a href="{{object.get_absolute_url}}">
-	        <h5>{{object.title}}</h5>
-	        <img src="{{SITE_URL}}{{object.get_thumb_url}}" />
-        </a>
-    </div>
-{% endfor %}
-<div style="clear: both;"/></div>
-
-<div class="pagenav">{%paginate%}</div>
-
+	{{breadcrumbtrail.as_ul}}
+    <hr />
+	
+	{% for object in objects %}
+	    <div style="float: left; padding: 7px;">
+	        <a href="{{object.get_absolute_url}}">
+		        <h5>{{object.title}}</h5>
+		        <img src="{{SITE_URL}}{{object.get_thumb_url}}" />
+	        </a>
+	    </div>
+	{% endfor %}
+	<div style="clear: both;"/></div>
 
 </div>
-
-
 
 {% endblock %}
