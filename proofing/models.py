@@ -40,8 +40,7 @@ from utils.watermark import apply_watermark
 
 PROOFING_PATH = getattr(settings, 'PROOFING_PATH','proofing')
 PROOFING_DEFAULT_THUMB = getattr(settings, 'PROOFING_DEFAULT_THUMB',settings.MEDIA_URL+'notfound.jpg')
-IMAGE_FIELD_MAX_LENGTH=100
-PROOFING_DEFAULT_THUMB_SIZE = getattr(settings, 'PROOFING_DEFAULT_THUMB_SIZE',(200,150))
+PROOFING_DEFAULT_THUMB_SLUG = getattr(settings, 'PROOFING_DEFAULT_THUMB_SLUG', '200x150')
 
 ### Choices
 
@@ -253,7 +252,7 @@ class GalleryUpload(wbmodels.WBModel):
 class Photo(wbmodels.WBModel):
     title = models.CharField(_('title'), max_length=100, unique=False)
     gallery = models.ForeignKey(Gallery)
-    image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, upload_to=os.path.join(PROOFING_PATH,'orig'))
+    image = models.ImageField(_('image'), max_length=150, upload_to=os.path.join(PROOFING_PATH,'orig'))
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(default=0, editable=True)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
@@ -328,7 +327,9 @@ class Photo(wbmodels.WBModel):
         return Image.open(self._get_SIZE_filename(size)).size
 
     def _get_SIZE_url(self, size):
-        photosize = PhotoSizeCache().sizes.get(size)
+        print 'photosize'
+        photosize = PhotoSizeCache().sizes[size]
+        
         if not self.size_exists(photosize):
             self.create_size(photosize)
         if photosize.increment_count:
@@ -339,34 +340,16 @@ class Photo(wbmodels.WBModel):
         photosize = PhotoSizeCache().sizes.get(size)
         return smart_str(os.path.join(self.cache_path(),
                             self._get_filename_for_size(photosize.title)))
+        
     def get_thumb_url(self):
-        default_size = "%dx%d" %(PROOFING_DEFAULT_THUMB_SIZE)
-            
-        try:
-            self._get_SIZE_url(default_size)
-        except:
-            ps = PhotoSize(
-                            name = default_size,
-                            width = PROOFING_DEFAULT_THUMB_SIZE[0],
-                            height = PROOFING_DEFAULT_THUMB_SIZE[1],
-                            quality = JPEG_QUALITY_CHOICES[3][0],
-                            upscale = False,
-                            crop = True,
-                            pre_cache = False,
-                            increment_count =  False,
-                            watermark = None,
-                            )
-            ps.save()
-            self.add_accessor_methods()
-
-        return self._get_SIZE_url(default_size)
+        return self._get_SIZE_url(PROOFING_DEFAULT_THUMB_SLUG)
     
     def increment_count(self):
         self.view_count += 1
         models.Model.save(self)
         
     def size_exists(self, photosize):
-        func = getattr(self, "get_%s_filename" % photosize.title, None)
+        func = getattr(self, "get_%s_filename" % photosize.slug, None)
         if func is not None:
             if os.path.isfile(func()):
                 return True
@@ -562,9 +545,12 @@ class PhotoSize(wbmodels.WBModel):
         if self.crop is True:
             if self.width == 0 or self.height == 0:
                 raise ValueError("PhotoSize width and/or height can not be zero if crop=True.")
+        if self.slug == 'thumb':
+            raise ValueError('Photosize cannot have a slug of \'thumb\'. Choose something else.')
         super(PhotoSize, self).save(*args, **kwargs)
-        PhotoSizeCache().reset()
+        
         self.clear_cache()
+        PhotoSizeCache().reset()
 
     def delete(self):
         assert self._get_pk_val() is not None, "%s object can't be deleted because its %s attribute is set to None." % (self._meta.object_name, self._meta.pk.attname)
