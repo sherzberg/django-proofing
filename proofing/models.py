@@ -140,6 +140,7 @@ class Gallery(wbmodels.WBModel):
     def get_absolute_url(self):
         return reverse(PROOFING_URL_NAMES.EVENT, args=[self.slug])
     
+    @property
     def has_users(self):
         if len(self.users.all()) > 0:
             return True
@@ -234,7 +235,7 @@ class GalleryUpload(wbmodels.WBModel):
                             photo = Photo(title=filename,
                                           slug=slug,
                                           description=self.description,
-                                          is_active=False,
+                                          is_active=True,
                                           gallery=gallery,
                                           crop_from='top'
                                           )
