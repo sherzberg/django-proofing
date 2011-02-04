@@ -67,6 +67,12 @@ Add Proofing templates:
     # settings.py # add after TEMPLATE_DIRS
     TEMPLATE_DIRS += ('/full/path/to/proofing/templates',)
 
+Template Setup:
+
+    - Proofing templates extend "main.html" so be sure to have a main.html in your root template folder.
+    - In main.html, proofing templates will render in a 'content' block
+        - put {% block content %}{% endblock %} some where in the middle of main.html
+
 
 Register Photologue with the Django Admin
 -----------------------------------------
