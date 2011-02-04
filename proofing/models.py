@@ -291,11 +291,9 @@ class Photo(wbmodels.WBModel):
             return not self.gallery.has_users()
     
     def cache_path(self):
-#        print 'cache_path', os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
         return os.path.join(settings.MEDIA_ROOT,PROOFING_PATH, "cache")
 
     def cache_url(self):
-#        print 'cache_url',  '/'.join([PROOFING_PATH, "cache"])
         return '/'.join([settings.MEDIA_URL, PROOFING_PATH, "cache"])
 
     def image_filename(self):
@@ -313,7 +311,7 @@ class Photo(wbmodels.WBModel):
                     curry(self._get_SIZE_filename, size=size))
     
     def _get_filename_for_size(self, size):
-        size = getattr(size, 'name', size)
+        size = getattr(size, 'slug', size)
         base, ext = os.path.splitext(self.image_filename())
         return ''.join([base, '_', size, ext])
 
@@ -327,19 +325,18 @@ class Photo(wbmodels.WBModel):
         return Image.open(self._get_SIZE_filename(size)).size
 
     def _get_SIZE_url(self, size):
-        print 'photosize'
         photosize = PhotoSizeCache().sizes[size]
         
         if not self.size_exists(photosize):
             self.create_size(photosize)
         if photosize.increment_count:
             self.increment_count()
-        return '/'.join([self.cache_url(), self._get_filename_for_size(photosize.title)])
+        return '/'.join([self.cache_url(), self._get_filename_for_size(photosize.slug)])
 
     def _get_SIZE_filename(self, size):
         photosize = PhotoSizeCache().sizes.get(size)
         return smart_str(os.path.join(self.cache_path(),
-                            self._get_filename_for_size(photosize.title)))
+                            self._get_filename_for_size(photosize.slug)))
         
     def get_thumb_url(self):
         return self._get_SIZE_url(PROOFING_DEFAULT_THUMB_SLUG)
@@ -396,15 +393,12 @@ class Photo(wbmodels.WBModel):
         return im
 
     def create_size(self, photosize):
-        
         if self.size_exists(photosize):
-            print 'exists'
             return
         if not os.path.isdir(self.cache_path()):
             os.makedirs(self.cache_path())
         try:
             im = Image.open(self.image.path)
-            print 'yes!!'
         except IOError:
             return
         # Save the original format
@@ -421,13 +415,11 @@ class Photo(wbmodels.WBModel):
         if photosize.watermark is not None:
             im = photosize.watermark.post_process(im)
         # Save file
-        im_filename = getattr(self, "get_%s_filename" % photosize.title)()
+        im_filename = getattr(self, "get_%s_filename" % photosize.slug)()
         
         #im.save(im_filename)
-        print self.image.path
         im.save(im_filename, 'JPEG', quality=int(photosize.quality), optimize=True)
-        print 'fn',im_filename
-            
+        
         try:
             if im_format != 'JPEG':
                 try:
@@ -444,7 +436,7 @@ class Photo(wbmodels.WBModel):
     def remove_size(self, photosize, remove_dirs=True):
         if not self.size_exists(photosize):
             return
-        filename = getattr(self, "get_%s_filename" % photosize.title)()
+        filename = getattr(self, "get_%s_filename" % photosize.slug)()
         if os.path.isfile(filename):
             os.remove(filename)
         if remove_dirs:
@@ -576,7 +568,7 @@ class PhotoSizeCache(object):
         if not len(self.sizes):
             sizes = PhotoSize.objects.all()
             for size in sizes:
-                self.sizes[size.title] = size
+                self.sizes[size.slug] = size
 
     def reset(self):
         self.sizes = {}
