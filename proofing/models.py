@@ -116,7 +116,7 @@ class GalleryManager(wbmodels.WBManager):
                               |
                               models.Q(date_expires=None)
                               )
-        objects = objects.filter(photo__in = Photo.objects.all())
+        objects = objects.filter(photo__in = Photo.active.all())
         objects = objects.exclude(users__in=User.objects.all())
         #there may be performance issues here... need to look at the sql
         return objects.distinct()
@@ -165,7 +165,7 @@ class Gallery(wbmodels.WBModel):
             return not self.has_users()
     
     def get_thumb_url(self):
-        my_photos = Photo.objects.filter(gallery=self)
+        my_photos = Photo.active.filter(gallery=self)
         if len(my_photos):
             return my_photos[0].get_thumb_url()
         else:
@@ -262,7 +262,11 @@ class GalleryUpload(wbmodels.WBModel):
 
 
 
-
+class PhotoManager(wbmodels.WBManager):
+    def get_query_set(self):
+        objects = super(PhotoManager, self).get_query_set()
+        objects = objects.filter(is_active=True)
+        return objects
 
 class Photo(wbmodels.WBModel):
     title = models.CharField(_('title'), max_length=100, unique=False)
@@ -273,8 +277,12 @@ class Photo(wbmodels.WBModel):
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
     
     class Meta(wbmodels.WBModel.Meta):
+        ordering = ('-date_added',)
         verbose_name = _("photo")
         verbose_name_plural = _("photos")
+    
+    objects = models.Manager()
+    active = PhotoManager()
     
     @property
     def EXIF(self):

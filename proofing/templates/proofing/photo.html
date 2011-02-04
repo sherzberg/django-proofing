@@ -6,7 +6,12 @@
     
     {{breadcrumbtrail.as_ul}}
     <hr />
-	
+    <div>
+        <a href="{{previous.get_absolute_url}}" style="float: right;">Next</a>
+		<a href="{{next.get_absolute_url}}" style="float: left;">Previous</a>
+		
+		<div style="clear: both"></div>
+	</div>
 	<h3>{{object.title}}</h3>
 	<img src="{{ object.get_display_url }}" />
 
