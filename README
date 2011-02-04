@@ -48,12 +48,24 @@ Configure Your Django Settings
 
 Add 'proofing' to your INSTALLED_APPS setting:
 
+    # settings.py
     INSTALLED_APPS = (
          # ...other installed applications,
          'proofing',
     )
 
-*** Confirm that your MEDIA_ROOT and MEDIA_URL settings are correct. ***
+Add Proofing to urls.py:
+
+    # urls.py:
+    urlpatterns += patterns('',
+        (r'^admin/(.*)', admin.site.root), # you may already have this
+        (r'^proofing/', include('proofing.urls')),
+    )
+    
+Add Proofing templates:
+
+    # settings.py # add after TEMPLATE_DIRS
+    TEMPLATE_DIRS += ('/full/path/to/proofing/templates',)
 
 
 Register Photologue with the Django Admin
@@ -65,7 +77,7 @@ Add the following to your projects urls.py file:
 
     admin.autodiscover()
 
-    
+
 Optional Proofing settings
 --------------------------
 
@@ -77,8 +89,10 @@ Optional Proofing settings
 	- relative url starting from MEDIA_ROOT for default thumb if no thumbnail is found
 	- see Category.get_thumb or Gallery.get_thumb for use
 
-- PROOFING_DEFAULT_THUMB_SLUG (default is '200x150')
+- PROOFING_DEFAULT_THUMB_SLUG (default is 'thumbnail')
 	- slug used to find the PhotoSize for Photo.get_thumb_url()
+	- remember to setup a PhotoSize for thumbnail
+	- *** cannot be 'thumb' ***
 
 
 

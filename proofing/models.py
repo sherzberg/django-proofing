@@ -40,7 +40,7 @@ from utils.watermark import apply_watermark
 
 PROOFING_PATH = getattr(settings, 'PROOFING_PATH','proofing')
 PROOFING_DEFAULT_THUMB = getattr(settings, 'PROOFING_DEFAULT_THUMB',settings.MEDIA_URL+'notfound.jpg')
-PROOFING_DEFAULT_THUMB_SLUG = getattr(settings, 'PROOFING_DEFAULT_THUMB_SLUG', '200x150')
+PROOFING_DEFAULT_THUMB_SLUG = getattr(settings, 'PROOFING_DEFAULT_THUMB_SLUG', 'thumbnail')
 
 ### Choices
 
