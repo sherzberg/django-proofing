@@ -22,21 +22,84 @@ Proofing First Class Objects
 	- Photosize (determines what sizes/styles of images can be displayed in templates)
 	- Watermark (watermarks are per photosize)
 
-Proofing Optional Application Settings:
-
-	- PROOFING_PATH	(default is 'proofing')
-		- relative file path starting from MEDIA_ROOT 
-		- location where django-proofing artifacts are stored
-
-	- PROOFING_DEFAULT_THUMB (default is settings.MEDIA_URL+'notfound.jpg')
-		- relative url starting from MEDIA_ROOT for default thumb if no thumbnail is found
-		- see Category.get_thumb or Gallery.get_thumb for use
-
-	- PROOFING_DEFAULT_THUMB_SLUG (default is '200x150')
-		- slug used to find the PhotoSize for Photo.get_thumb_url()
 
 
+Installation
+------------
+
+    cd ~/src
+    git clone git://github.com/whelmingbytes/django-proofing.git
+    cd django-proofing
+    python setup.py install
+    
+    
+Verify Install
+--------------
+
+    python manage.py shell
+    
+    >>> import proofing
+    >>> proofing.VERSION
+    (0, 1)
+
+    
+Configure Your Django Settings
+------------------------------
+
+Add 'proofing' to your INSTALLED_APPS setting:
+
+    INSTALLED_APPS = (
+         # ...other installed applications,
+         'proofing',
+    )
+
+*** Confirm that your MEDIA_ROOT and MEDIA_URL settings are correct. ***
 
 
-Thanks: django-photologue
-	The feature set of django-photologue where very similar to the needs of Proofing. Parts have been modified to meet the needs of Proofing and links to the django-photologue site have been included. http://code.google.com/p/django-photologue/
+Register Photologue with the Django Admin
+-----------------------------------------
+
+Add the following to your projects urls.py file:
+
+    from django.contrib import admin
+
+    admin.autodiscover()
+
+    
+Optional Proofing settings
+--------------------------
+
+- PROOFING_PATH	(default is 'proofing')
+	- relative file path starting from MEDIA_ROOT 
+	- location where django-proofing artifacts are stored
+
+- PROOFING_DEFAULT_THUMB (default is settings.MEDIA_URL+'notfound.jpg')
+	- relative url starting from MEDIA_ROOT for default thumb if no thumbnail is found
+	- see Category.get_thumb or Gallery.get_thumb for use
+
+- PROOFING_DEFAULT_THUMB_SLUG (default is '200x150')
+	- slug used to find the PhotoSize for Photo.get_thumb_url()
+
+
+
+Additional Documentation and Support
+------------------------------------
+
+Wiki TODO:
+    
+    https://github.com/whelmingbytes/django-proofing/wiki
+    
+Git Repository:
+
+    https://github.com/whelmingbytes/django-proofing
+    
+Issue Tracking:
+
+    https://github.com/whelmingbytes/django-proofing/issues
+
+
+
+Thanks
+------
+   
+The feature set of django-photologue where very similar to the needs of Proofing. Parts have been modified to meet the needs of Proofing and links to the django-photologue site have been included. http://code.google.com/p/django-photologue/
