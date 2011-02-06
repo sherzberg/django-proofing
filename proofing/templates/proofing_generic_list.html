@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+
+
+{% block content %}
+<div>
+
+	{{breadcrumbtrail.as_ul}}
+    <hr />
+	
+	{% for object in objects %}
+	    <div style="float: left; padding: 7px;">
+	        <a href="{{object.get_absolute_url}}">
+		        <h5>{{object.title}}</h5>
+		        <img src="{{SITE_URL}}{{object.get_thumb_url}}" />
+	        </a>
+	    </div>
+	{% endfor %}
+	<div style="clear: both;"/></div>
+
+</div>
+
+{% endblock %}

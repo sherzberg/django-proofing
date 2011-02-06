@@ -10,7 +10,7 @@ from utils.breadcrumb import WBBreadcrumbTrail, WBBreadcrumb
 
 
 
-def index(request, template_name="proofing/generic_list.html"):
+def index(request, template_name="proofing_generic_list.html"):
     objects = Category.active.all()
     
     breadcrumbtrail = WBBreadcrumbTrail(WBBreadcrumb('Home',reverse('proofing-index')))
@@ -19,7 +19,7 @@ def index(request, template_name="proofing/generic_list.html"):
 
 
 
-def show_category(request, slug, template_name="proofing/generic_list.html"):
+def show_category(request, slug, template_name="proofing_generic_list.html"):
     object = get_object_or_404(Category, slug = slug)
     
     objects = Gallery.active.filter(category=object)
@@ -31,7 +31,7 @@ def show_category(request, slug, template_name="proofing/generic_list.html"):
 
 
 @check_perm_for(Gallery)
-def show_gallery(request, object, template_name="proofing/generic_list.html"):
+def show_gallery(request, object, template_name="proofing_generic_list.html"):
     
     objects = Photo.active.filter(gallery=object)
     
@@ -42,7 +42,7 @@ def show_gallery(request, object, template_name="proofing/generic_list.html"):
 
 
 @check_perm_for(Photo)
-def show_photo(request, object, template_name="proofing/photo.html"):
+def show_photo(request, object, template_name="proofing_photo.html"):
     
     breadcrumbtrail = WBBreadcrumbTrail(
                                         WBBreadcrumb('Home',reverse('proofing-index')),
