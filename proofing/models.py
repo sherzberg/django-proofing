@@ -121,6 +121,9 @@ class GalleryManager(wbmodels.WBManager):
         #there may be performance issues here... need to look at the sql
         return objects.distinct()
 
+    def get_photos(self):
+        return Photo.active.filter(gallery=self)
+    
 class Gallery(wbmodels.WBModel):
     title = models.CharField(_('title'), max_length=100, unique=True)
     
