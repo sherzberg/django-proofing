@@ -4,7 +4,7 @@ from models import *
 
 
 class DefaultAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date_added', 'date_changed', 'is_active',)
+    list_display = ('title', 'date_added', 'date_changed', 'is_active','public')
     list_filter = ['date_added']
     date_hierarchy = 'date_added'
     prepopulated_fields = {'slug': ('title',)}
